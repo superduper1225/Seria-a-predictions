@@ -97,7 +97,7 @@ st.markdown("### Select match results and view updated standings dynamically!")
 
 if st.button("🔄 Reset All Results"):
     st.session_state.match_results = {}
-    st.experimental_rerun()
+    st.rerun()  # ✅ Fixed: use st.rerun() instead of st.experimental_rerun()
 
 # ---------------------- TEAM TABS ---------------------- #
 
@@ -148,7 +148,7 @@ for match_key, result in match_results.items():
             updated_standings[team] += 3
         elif result == "Draw":
             updated_standings[team] += 1
-    # Not updating opponent points since they're not tracked (outside top 6)
+    # Not updating opponent points if not in top 6
 
 # Build final table
 final_table = pd.DataFrame(updated_standings.items(), columns=["Team", "Points"])
