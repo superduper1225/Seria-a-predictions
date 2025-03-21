@@ -76,19 +76,20 @@ fixtures = [
     ("Lazio", "Lecce"),
 ]
 
-# Mirrored results
 result_mapping = {
     "Win": "Loss",
     "Loss": "Win",
     "Draw": "Draw",
 }
 
-# ---------------------- STATE & RESET ---------------------- #
+# ---------------------- STATE ---------------------- #
 
 if "match_results" not in st.session_state:
     st.session_state.match_results = {}
 
 match_results = st.session_state.match_results
+
+# ---------------------- UI HEADER ---------------------- #
 
 st.title("⚽ Serie A Match-by-Match Standings Simulator")
 st.markdown("### Select match results and view updated standings dynamically!")
@@ -108,34 +109,38 @@ for i, team in enumerate(original_teams.keys()):
         for match in fixtures:
             if team in match:
                 opponent = match[0] if match[1] == team else match[1]
-                match_key = f"{team} vs {opponent}"
-                reverse_match_key = f"{opponent} vs {team}"
+                teams_sorted = sorted([team, opponent])
+                is_owner = team == teams_sorted[0]
 
-                # Lock only if reverse key was already set from another tab
-                if reverse_match_key in match_results and match_key not in match_results:
-                    mirrored_result = result_mapping[match_results[reverse_match_key]]
-                    st.markdown(f"🔒 **Result vs {opponent}: {mirrored_result} (auto-filled)**")
-                    match_results[match_key] = mirrored_result
-                else:
+                match_key = f"{teams_sorted[0]} vs {teams_sorted[1]}"
+
+                if is_owner:
+                    # This team "owns" the input widget
                     result = st.radio(
                         f"Result vs {opponent}",
                         ["Win", "Draw", "Loss"],
-                        key=f"{team}::{match_key}",  # ✅ unique per tab/fixture
+                        key=match_key,
                         horizontal=True
                     )
-                    match_results[match_key] = result
-                    match_results[reverse_match_key] = result_mapping[result]
+                    # Save both directions
+                    match_results[f"{team} vs {opponent}"] = result
+                    match_results[f"{opponent} vs {team}"] = result_mapping[result]
+                else:
+                    # Read-only mirrored result
+                    if f"{team} vs {opponent}" in match_results:
+                        mirrored_result = match_results[f"{team} vs {opponent}"]
+                        st.markdown(f"🔒 **Result vs {opponent}: {mirrored_result} (auto-filled)**")
+                    else:
+                        st.markdown(f"🕒 **Result vs {opponent}: Not yet selected**")
 
-# ---------------------- STANDINGS CALCULATION ---------------------- #
+# ---------------------- STANDINGS ---------------------- #
 
-# Track original rankings
 original_positions = {
     team: rank for rank, (team, _) in enumerate(
         sorted(original_teams.items(), key=lambda x: x[1], reverse=True)
     )
 }
 
-# Create updated standings
 updated_standings = original_teams.copy()
 
 for match_key, result in match_results.items():
@@ -146,11 +151,9 @@ for match_key, result in match_results.items():
         elif result == "Draw":
             updated_standings[team] += 1
 
-# Generate table
 final_table = pd.DataFrame(updated_standings.items(), columns=["Team", "Points"])
 final_table = final_table.sort_values(by="Points", ascending=False).reset_index(drop=True)
 
-# Add movement
 def get_movement_icon(team, new_rank):
     old_rank = original_positions[team]
     if new_rank < old_rank:
