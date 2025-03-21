@@ -82,14 +82,12 @@ result_mapping = {
     "Draw": "Draw",
 }
 
-# ---------------------- STATE ---------------------- #
+# ---------------------- STATE & RESET ---------------------- #
 
 if "match_results" not in st.session_state:
     st.session_state.match_results = {}
 
 match_results = st.session_state.match_results
-
-# ---------------------- UI HEADER ---------------------- #
 
 st.title("⚽ Serie A Match-by-Match Standings Simulator")
 st.markdown("### Select match results and view updated standings dynamically!")
@@ -109,24 +107,22 @@ for i, team in enumerate(original_teams.keys()):
         for match in fixtures:
             if team in match:
                 opponent = match[0] if match[1] == team else match[1]
-                teams_sorted = sorted([team, opponent])
-                is_owner = team == teams_sorted[0]
 
-                match_key = f"{teams_sorted[0]} vs {teams_sorted[1]}"
+                # Consistently sort teams to get a unique widget key
+                key_team1, key_team2 = sorted([team, opponent])
+                widget_key = f"{key_team1}_vs_{key_team2}"
 
-                if is_owner:
-                    # This team "owns" the input widget
+                # Only create the radio once (in the "owning" team's tab)
+                if team == key_team1:
                     result = st.radio(
                         f"Result vs {opponent}",
                         ["Win", "Draw", "Loss"],
-                        key=match_key,
+                        key=widget_key,
                         horizontal=True
                     )
-                    # Save both directions
                     match_results[f"{team} vs {opponent}"] = result
                     match_results[f"{opponent} vs {team}"] = result_mapping[result]
                 else:
-                    # Read-only mirrored result
                     if f"{team} vs {opponent}" in match_results:
                         mirrored_result = match_results[f"{team} vs {opponent}"]
                         st.markdown(f"🔒 **Result vs {opponent}: {mirrored_result} (auto-filled)**")
