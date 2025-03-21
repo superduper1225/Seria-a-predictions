@@ -1,8 +1,8 @@
 import streamlit as st
 import pandas as pd
 
-# Corrected Serie A Standings as of March 19, 2025
-teams = {
+# Original Serie A Standings as of March 19, 2025
+original_teams = {
     "Inter Milan": 64,
     "Napoli": 61,
     "Atalanta": 58,
@@ -11,7 +11,7 @@ teams = {
     "Lazio": 51,
 }
 
-# Corrected Remaining Fixtures for Each Team (Bidirectional Matching)
+# Fixtures (unchanged)
 fixtures = [
     ("Inter Milan", "Udinese"),
     ("Inter Milan", "Parma"),
@@ -52,7 +52,6 @@ fixtures = [
     ("Bologna", "Milan"),
     ("Bologna", "Fiorentina"),
     ("Bologna", "Genoa"),
-    
 
     ("Juventus", "Genoa"),
     ("Juventus", "Roma"),
@@ -75,36 +74,29 @@ fixtures = [
     ("Lazio", "Lecce"),
 ]
 
-# Mapping for mirroring results
 result_mapping = {
     "Win": "Loss",
     "Loss": "Win",
     "Draw": "Draw",
 }
 
-# Dictionary to store results and ensure synchronization across both teams
 match_results = {}
 
 st.title("⚽ Serie A Match-by-Match Standings Simulator")
-
 st.markdown("### Select match results and view updated standings dynamically!")
 
-# Creating UI tabs for teams
-tabs = st.tabs(list(teams.keys()))
+tabs = st.tabs(list(original_teams.keys()))
 
-# Process each team's matches
-for i, team in enumerate(teams.keys()):
+# Radio button UI
+for i, team in enumerate(original_teams.keys()):
     with tabs[i]:
         st.subheader(f"{team}'s Remaining Matches")
-        
         for match in fixtures:
             if team in match:
                 opponent = match[0] if match[1] == team else match[1]
-
                 match_key = f"{team} vs {opponent}"
                 reverse_match_key = f"{opponent} vs {team}"
 
-                # Ensure synchronized result across both teams
                 if reverse_match_key in match_results:
                     result = match_results[reverse_match_key]
                 else:
@@ -117,18 +109,22 @@ for i, team in enumerate(teams.keys()):
                     match_results[match_key] = result
                     match_results[reverse_match_key] = result_mapping[result]
 
-# Apply results to standings, ensuring valid teams are updated
+# Initialize fresh standings
+updated_standings = original_teams.copy()
+
+# Apply match results
 for match_key, result in match_results.items():
     team, opponent = match_key.split(" vs ")
 
-    if team in teams:
+    if team in updated_standings:
         if result == "Win":
-            teams[team] += 3
+            updated_standings[team] += 3
         elif result == "Draw":
-            teams[team] += 1
+            updated_standings[team] += 1
+    # You can also extend to track points for opponents if needed
 
-# Generate final table
-final_table = pd.DataFrame(teams.items(), columns=["Team", "Points"])
+# Display standings
+final_table = pd.DataFrame(updated_standings.items(), columns=["Team", "Points"])
 final_table = final_table.sort_values(by="Points", ascending=False).reset_index(drop=True)
 
 st.subheader("🏆 Projected Final Serie A Standings")
