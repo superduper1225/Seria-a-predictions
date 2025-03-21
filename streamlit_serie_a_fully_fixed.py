@@ -76,7 +76,7 @@ fixtures = [
     ("Lazio", "Lecce"),
 ]
 
-# Result mapping for mirroring
+# Mirrored results
 result_mapping = {
     "Win": "Loss",
     "Loss": "Win",
@@ -90,7 +90,6 @@ if "match_results" not in st.session_state:
 
 match_results = st.session_state.match_results
 
-# Title & reset
 st.title("⚽ Serie A Match-by-Match Standings Simulator")
 st.markdown("### Select match results and view updated standings dynamically!")
 
@@ -112,7 +111,7 @@ for i, team in enumerate(original_teams.keys()):
                 match_key = f"{team} vs {opponent}"
                 reverse_match_key = f"{opponent} vs {team}"
 
-                # Lock result if reverse was already set and this match hasn't been set yet
+                # Lock only if reverse key was already set from another tab
                 if reverse_match_key in match_results and match_key not in match_results:
                     mirrored_result = result_mapping[match_results[reverse_match_key]]
                     st.markdown(f"🔒 **Result vs {opponent}: {mirrored_result} (auto-filled)**")
@@ -121,7 +120,7 @@ for i, team in enumerate(original_teams.keys()):
                     result = st.radio(
                         f"Result vs {opponent}",
                         ["Win", "Draw", "Loss"],
-                        key=match_key,
+                        key=f"{team}::{match_key}",  # ✅ unique per tab/fixture
                         horizontal=True
                     )
                     match_results[match_key] = result
@@ -129,14 +128,14 @@ for i, team in enumerate(original_teams.keys()):
 
 # ---------------------- STANDINGS CALCULATION ---------------------- #
 
-# Store original positions for movement tracking
+# Track original rankings
 original_positions = {
     team: rank for rank, (team, _) in enumerate(
         sorted(original_teams.items(), key=lambda x: x[1], reverse=True)
     )
 }
 
-# Fresh copy of standings to calculate updates
+# Create updated standings
 updated_standings = original_teams.copy()
 
 for match_key, result in match_results.items():
@@ -147,11 +146,11 @@ for match_key, result in match_results.items():
         elif result == "Draw":
             updated_standings[team] += 1
 
-# Build final table
+# Generate table
 final_table = pd.DataFrame(updated_standings.items(), columns=["Team", "Points"])
 final_table = final_table.sort_values(by="Points", ascending=False).reset_index(drop=True)
 
-# Add movement icons
+# Add movement
 def get_movement_icon(team, new_rank):
     old_rank = original_positions[team]
     if new_rank < old_rank:
