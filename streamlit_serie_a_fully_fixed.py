@@ -76,6 +76,7 @@ fixtures = [
     ("Lazio", "Lecce"),
 ]
 
+# Mirrored results
 result_mapping = {
     "Win": "Loss",
     "Loss": "Win",
@@ -108,12 +109,12 @@ for i, team in enumerate(original_teams.keys()):
             if team in match:
                 opponent = match[0] if match[1] == team else match[1]
 
-                # Consistently sort teams to get a unique widget key
+                # Unique and stable match key
                 key_team1, key_team2 = sorted([team, opponent])
-                widget_key = f"{key_team1}_vs_{key_team2}"
+                widget_key = f"{key_team1}_vs_{key_team2}::{team}"  # ✅ Unique per tab
 
-                # Only create the radio once (in the "owning" team's tab)
                 if team == key_team1:
+                    # This tab owns the radio button
                     result = st.radio(
                         f"Result vs {opponent}",
                         ["Win", "Draw", "Loss"],
