@@ -58,26 +58,49 @@ if st.button("🔄 Reset All Results"):
     st.rerun()
 
 # -------------------- MATCH SELECTION -------------------- #
+points_progression = {team: [points] for team, points in tracked_teams.items()}
+updated_points = tracked_teams.copy()
+current_week = None
+
 st.subheader("📅 Match Results by Week")
-weekly_results = defaultdict(list)
 
 for i, (week, team1, team2) in enumerate(fixtures):
+    if week != current_week:
+        if current_week is not None:
+            df_week = pd.DataFrame({"Team": list(updated_points.keys()), "Points": list(updated_points.values())})
+            df_week = df_week.sort_values(by="Points", ascending=False).reset_index(drop=True)
+            st.markdown(f"**{current_week} Standings**")
+            st.dataframe(df_week, height=300)
+        current_week = week
+        st.markdown(f"### 🗓️ {week}")
+
     match_key = f"{team1} vs {team2}"
     reverse_key = f"{team2} vs {team1}"
     widget_key = f"{i}::{team1}::{team2}"
-
-    if i == 0 or fixtures[i - 1][0] != week:
-        st.markdown(f"### 🗓️ {week}")
 
     result = st.radio(
         f"{team1} vs {team2}",
         ["Win", "Draw", "Loss"],
         key=widget_key,
-        horizontal=True
+        horizontal=True,
+        index=None if widget_key not in st.session_state else ["Win", "Draw", "Loss"].index(st.session_state[widget_key])
     )
     match_results[match_key] = result
     match_results[reverse_key] = {"Win": "Loss", "Loss": "Win", "Draw": "Draw"}[result]
-    weekly_results[week].append((team1, result))
+
+    if team1 in updated_points:
+        if result == "Win":
+            updated_points[team1] += 3
+        elif result == "Draw":
+            updated_points[team1] += 1
+    points_progression[team1].append(updated_points[team1])
+
+# Final week standings
+if current_week is not None:
+    df_week = pd.DataFrame({"Team": list(updated_points.keys()), "Points": list(updated_points.values())})
+    df_week = df_week.sort_values(by="Points", ascending=False).reset_index(drop=True)
+    st.markdown(f"**{current_week} Standings**")
+    st.dataframe(df_week, height=300)
 
 # -------------------- STANDINGS AFTER EACH WEEK -------------------- #
 st.subheader("📊 Standings After Each Week")
@@ -130,4 +153,3 @@ standings_df = standings_df[["Movement", "Team", "Points"]]
 # -------------------- DISPLAY -------------------- #
 st.subheader("🏆 Projected Final Standings")
 st.dataframe(standings_df, height=400)
-
