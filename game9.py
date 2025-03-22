@@ -109,12 +109,6 @@ if current_week is not None:
     st.markdown(f"**{current_week} Standings**")
     st.dataframe(df_week, height=300)
 
-# -------------------- LINE CHART -------------------- #
-st.subheader("📈 Points Progression by Week")
-points_df = pd.DataFrame(points_progression)
-points_df.index = ["Start"] + [f"Week {i}" for i in range(30, 30 + len(points_df.index) - 1)]
-st.line_chart(points_df)
-
 # -------------------- FINAL STANDINGS -------------------- #
 original_ranks = {
     team: idx for idx, (team, _) in enumerate(
