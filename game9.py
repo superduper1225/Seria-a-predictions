@@ -52,9 +52,9 @@ st.title("⚽ Serie A Fixture Simulator")
 st.markdown("Simulate all remaining matches. Standings reflect only the top 6 teams.")
 
 if st.button("🔄 Reset All Results"):
-    for key in list(st.session_state.keys()):
-        if "::" in key:
-            del st.session_state[key]
+    keys_to_clear = [key for key in st.session_state.keys() if "::" in key]
+    for key in keys_to_clear:
+        st.session_state.pop(key, None)
     st.session_state.match_results = {}
     st.rerun()
 
