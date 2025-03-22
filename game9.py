@@ -89,17 +89,24 @@ for i, (week, team1, team2) in enumerate(fixtures):
     if result:
         match_results[reverse_key] = {"Win": "Loss", "Loss": "Win", "Draw": "Draw"}[result]
 
-    if result:
-        if team1 in updated_points:
-            if result == "Win":
-                updated_points[team1] += 3
-            elif result == "Draw":
-                updated_points[team1] += 1
-        if team2 in updated_points:
-            if result == "Loss":
-                updated_points[team2] += 3
-            elif result == "Draw":
-                updated_points[team2] += 1
+    # Reset both teams' match points before recalculating
+        if team1 in updated_points and team2 in updated_points:
+            # Remove previously applied points for this fixture (if any)
+            base_points = tracked_teams.copy()
+            updated_points[team1] = base_points[team1]
+            updated_points[team2] = base_points[team2]
+
+        if result:
+            if team1 in updated_points:
+                if result == "Win":
+                    updated_points[team1] += 3
+                elif result == "Draw":
+                    updated_points[team1] += 1
+            if team2 in updated_points:
+                if result == "Loss":
+                    updated_points[team2] += 3
+                elif result == "Draw":
+                    updated_points[team2] += 1
     points_progression[team1].append(updated_points[team1])
 
 # Final week standings
