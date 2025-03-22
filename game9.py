@@ -73,11 +73,11 @@ for i, (week, team1, team2) in enumerate(fixtures):
             st.markdown(f"**{current_week} Standings**")
             st.dataframe(df_week, height=300)
         current_week = week
-        with st.expander(f"🗓️ {week} Matches", expanded=False):
+                with st.expander(f"🗓️ {week} Matches", expanded=False):
 
-    match_key = f"{team1} vs {team2}"
-    reverse_key = f"{team2} vs {team1}"
-    widget_key = f"{i}::{team1}::{team2}"
+                match_key = f"{team1} vs {team2}"
+                reverse_key = f"{team2} vs {team1}"
+                widget_key = f"{i}::{team1}::{team2}"
 
             result = st.radio(
         f"{team1} vs {team2}",
@@ -86,31 +86,31 @@ for i, (week, team1, team2) in enumerate(fixtures):
         horizontal=True,
         index=None if widget_key not in st.session_state or st.session_state[widget_key] not in ["Win", "Draw", "Loss"] else ["Win", "Draw", "Loss"].index(st.session_state[widget_key])
     )
-            match_results[match_key] = result
-        if result not in ["Win", "Draw", "Loss"]:
+                        match_results[match_key] = result
+                    if result not in ["Win", "Draw", "Loss"]:
             weeks_missing_results.add(week)
-    if result:
-        match_results[reverse_key] = {"Win": "Loss", "Loss": "Win", "Draw": "Draw"}[result]
+                                if result:
+                        match_results[reverse_key] = {"Win": "Loss", "Loss": "Win", "Draw": "Draw"}[result]
 
     # Reset both teams' match points before recalculating
-        if team1 in updated_points and team2 in updated_points:
+                        if team1 in updated_points and team2 in updated_points:
             # Remove previously applied points for this fixture (if any)
-            base_points = tracked_teams.copy()
-            updated_points[team1] = base_points[team1]
-            updated_points[team2] = base_points[team2]
+                                base_points = tracked_teams.copy()
+                                updated_points[team1] = base_points[team1]
+                                updated_points[team2] = base_points[team2]
 
         if result:
-            if team1 in updated_points:
-                if result == "Win":
-                    updated_points[team1] += 3
+                                if team1 in updated_points:
+                                        if result == "Win":
+                                                updated_points[team1] += 3
+                                                                elif result == "Draw":
+                                                updated_points[team1] += 1
+                                if team2 in updated_points:
+                                        if result == "Loss":
+                                                updated_points[team2] += 3
                 elif result == "Draw":
-                    updated_points[team1] += 1
-            if team2 in updated_points:
-                if result == "Loss":
-                    updated_points[team2] += 3
-                elif result == "Draw":
-                    updated_points[team2] += 1
-    points_progression[team1].append(updated_points[team1])
+                                                updated_points[team2] += 1
+                points_progression[team1].append(updated_points[team1])
 
 # Final week standings
 if current_week is not None:
