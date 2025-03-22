@@ -65,52 +65,56 @@ current_week = None
 st.subheader("📅 Match Results by Week")
 
 weeks_missing_results = set()
-for i, (week, team1, team2) in enumerate(fixtures):
-    if week != current_week:
-        if current_week is not None:
-            df_week = pd.DataFrame({"Team": list(updated_points.keys()), "Points": list(updated_points.values())})
-            df_week = df_week.sort_values(by="Points", ascending=False).reset_index(drop=True)
-            st.markdown(f"**{current_week} Standings**")
-            st.dataframe(df_week, height=300)
-        current_week = week
-                with st.expander(f"🗓️ {week} Matches", expanded=False):
+weekly_fixtures = defaultdict(list)
+for fixture in fixtures:
+    weekly_fixtures[fixture[0]].append(fixture[1:])
 
-                match_key = f"{team1} vs {team2}"
-                reverse_key = f"{team2} vs {team1}"
-                widget_key = f"{i}::{team1}::{team2}"
+weeks_missing_results = set()
+
+for week, matches in weekly_fixtures.items():
+    with st.expander(f"🗓️ {week} Matches", expanded=False):
+        for i, (team1, team2) in enumerate(matches):
+            match_key = f"{team1} vs {team2}"
+            reverse_key = f"{team2} vs {team1}"
+            widget_key = f"{week}::{team1}::{team2}"
 
             result = st.radio(
-        f"{team1} vs {team2}",
-        ["Win", "Draw", "Loss"],
-        key=widget_key,
-        horizontal=True,
-        index=None if widget_key not in st.session_state or st.session_state[widget_key] not in ["Win", "Draw", "Loss"] else ["Win", "Draw", "Loss"].index(st.session_state[widget_key])
-    )
-                        match_results[match_key] = result
-                    if result not in ["Win", "Draw", "Loss"]:
-            weeks_missing_results.add(week)
-                                if result:
-                        match_results[reverse_key] = {"Win": "Loss", "Loss": "Win", "Draw": "Draw"}[result]
+                f"{team1} vs {team2}",
+                ["Win", "Draw", "Loss"],
+                key=widget_key,
+                horizontal=True,
+                index=None if widget_key not in st.session_state or st.session_state[widget_key] not in ["Win", "Draw", "Loss"] else ["Win", "Draw", "Loss"].index(st.session_state[widget_key])
+            )
 
-    # Reset both teams' match points before recalculating
-                        if team1 in updated_points and team2 in updated_points:
-            # Remove previously applied points for this fixture (if any)
-                                base_points = tracked_teams.copy()
-                                updated_points[team1] = base_points[team1]
-                                updated_points[team2] = base_points[team2]
+            match_results[match_key] = result
+            if result not in ["Win", "Draw", "Loss"]:
+                weeks_missing_results.add(week)
+            if result:
+                match_results[reverse_key] = {"Win": "Loss", "Loss": "Win", "Draw": "Draw"}[result]
 
-        if result:
-                                if team1 in updated_points:
-                                        if result == "Win":
-                                                updated_points[team1] += 3
-                                                                elif result == "Draw":
-                                                updated_points[team1] += 1
-                                if team2 in updated_points:
-                                        if result == "Loss":
-                                                updated_points[team2] += 3
-                elif result == "Draw":
-                                                updated_points[team2] += 1
+                if team1 in updated_points and team2 in updated_points:
+                    base_points = tracked_teams.copy()
+                    updated_points[team1] = base_points[team1]
+                    updated_points[team2] = base_points[team2]
+
+                if result:
+                    if team1 in updated_points:
+                        if result == "Win":
+                            updated_points[team1] += 3
+                        elif result == "Draw":
+                            updated_points[team1] += 1
+                    if team2 in updated_points:
+                        if result == "Loss":
+                            updated_points[team2] += 3
+                        elif result == "Draw":
+                            updated_points[team2] += 1
+
                 points_progression[team1].append(updated_points[team1])
+
+    df_week = pd.DataFrame({"Team": list(updated_points.keys()), "Points": list(updated_points.values())})
+    df_week = df_week.sort_values(by="Points", ascending=False).reset_index(drop=True)
+    st.markdown(f"**{week} Standings**")
+    st.dataframe(df_week, height=300)
 
 # Final week standings
 if current_week is not None:
