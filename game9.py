@@ -52,10 +52,9 @@ st.title("⚽ Serie A Fixture Simulator")
 st.markdown("Simulate all remaining matches. Standings reflect only the top 6 teams.")
 
 if st.button("🔄 Reset All Results"):
-    keys_to_clear = [key for key in st.session_state.keys() if "::" in key]
+    keys_to_clear = [key for key in list(st.session_state.keys()) if "::" in key or key.startswith("match_results")]
     for key in keys_to_clear:
-        st.session_state.pop(key, None)
-    st.session_state.match_results = {}
+        del st.session_state[key]
     st.rerun()
 
 # -------------------- MATCH SELECTION -------------------- #
@@ -131,3 +130,4 @@ standings_df = standings_df[["Movement", "Team", "Points"]]
 # -------------------- DISPLAY -------------------- #
 st.subheader("🏆 Projected Final Standings")
 st.dataframe(standings_df, height=400)
+
