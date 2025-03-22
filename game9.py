@@ -86,7 +86,8 @@ for i, (week, team1, team2) in enumerate(fixtures):
         index=None if widget_key not in st.session_state else ["Win", "Draw", "Loss"].index(st.session_state[widget_key])
     )
     match_results[match_key] = result
-    match_results[reverse_key] = {"Win": "Loss", "Loss": "Win", "Draw": "Draw"}[result]
+    if result:
+        match_results[reverse_key] = {"Win": "Loss", "Loss": "Win", "Draw": "Draw"}[result]
 
     if team1 in updated_points:
         if result == "Win":
