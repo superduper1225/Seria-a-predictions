@@ -64,6 +64,7 @@ current_week = None
 
 st.subheader("📅 Match Results by Week")
 
+weeks_missing_results = set()
 for i, (week, team1, team2) in enumerate(fixtures):
     if week != current_week:
         if current_week is not None:
@@ -72,20 +73,22 @@ for i, (week, team1, team2) in enumerate(fixtures):
             st.markdown(f"**{current_week} Standings**")
             st.dataframe(df_week, height=300)
         current_week = week
-        st.markdown(f"### 🗓️ {week}")
+        with st.expander(f"🗓️ {week} Matches", expanded=False):
 
     match_key = f"{team1} vs {team2}"
     reverse_key = f"{team2} vs {team1}"
     widget_key = f"{i}::{team1}::{team2}"
 
-    result = st.radio(
+            result = st.radio(
         f"{team1} vs {team2}",
         ["Win", "Draw", "Loss"],
         key=widget_key,
         horizontal=True,
         index=None if widget_key not in st.session_state or st.session_state[widget_key] not in ["Win", "Draw", "Loss"] else ["Win", "Draw", "Loss"].index(st.session_state[widget_key])
     )
-    match_results[match_key] = result
+            match_results[match_key] = result
+        if result not in ["Win", "Draw", "Loss"]:
+            weeks_missing_results.add(week)
     if result:
         match_results[reverse_key] = {"Win": "Loss", "Loss": "Win", "Draw": "Draw"}[result]
 
@@ -139,5 +142,8 @@ standings_df["Movement"] = [movement_icon(row["Team"], idx) for idx, row in stan
 standings_df = standings_df[["Movement", "Team", "Points"]]
 
 # -------------------- DISPLAY -------------------- #
+if weeks_missing_results:
+    st.warning(f"⚠️ You have unselected matches in: {', '.join(sorted(weeks_missing_results))}. Final standings may be incomplete.")
+
 st.subheader("🏆 Projected Final Standings")
 st.dataframe(standings_df, height=400)
