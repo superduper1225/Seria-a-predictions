@@ -83,7 +83,7 @@ for i, (week, team1, team2) in enumerate(fixtures):
         ["Win", "Draw", "Loss"],
         key=widget_key,
         horizontal=True,
-        index=None if widget_key not in st.session_state else ["Win", "Draw", "Loss"].index(st.session_state[widget_key])
+        index=None if widget_key not in st.session_state or st.session_state[widget_key] not in ["Win", "Draw", "Loss"] else ["Win", "Draw", "Loss"].index(st.session_state[widget_key])
     )
     match_results[match_key] = result
     if result:
@@ -101,32 +101,6 @@ if current_week is not None:
     df_week = pd.DataFrame({"Team": list(updated_points.keys()), "Points": list(updated_points.values())})
     df_week = df_week.sort_values(by="Points", ascending=False).reset_index(drop=True)
     st.markdown(f"**{current_week} Standings**")
-    st.dataframe(df_week, height=300)
-
-# -------------------- STANDINGS AFTER EACH WEEK -------------------- #
-st.subheader("📊 Standings After Each Week")
-original_ranks = {
-    team: idx for idx, (team, _) in enumerate(
-        sorted(tracked_teams.items(), key=lambda x: x[1], reverse=True)
-    )
-}
-
-points_progression = {team: [points] for team, points in tracked_teams.items()}
-updated_points = tracked_teams.copy()
-
-for week in sorted(weekly_results.keys(), key=lambda w: int(w.split()[1])):
-    for team, result in weekly_results[week]:
-        if team in updated_points:
-            if result == "Win":
-                updated_points[team] += 3
-            elif result == "Draw":
-                updated_points[team] += 1
-    for team in tracked_teams:
-        points_progression[team].append(updated_points[team])
-
-    df_week = pd.DataFrame({"Team": list(updated_points.keys()), "Points": list(updated_points.values())})
-    df_week = df_week.sort_values(by="Points", ascending=False).reset_index(drop=True)
-    st.markdown(f"**{week} Standings**")
     st.dataframe(df_week, height=300)
 
 # -------------------- LINE CHART -------------------- #
