@@ -72,6 +72,23 @@ weeks_missing_results = set()
 
 points_progression = {team: [tracked_teams[team]] for team in tracked_teams}
 
+updated_points = tracked_teams.copy()
+weekly_standings = {}
+
+# Recalculate all updated points cumulatively before displaying
+for match_key, result in match_results.items():
+    if result not in ["Win", "Draw", "Loss"]:
+        continue
+    team1, team2 = match_key.split(" vs ")
+    if team1 in updated_points and team2 in updated_points:
+        if result == "Win":
+            updated_points[team1] += 3
+        elif result == "Draw":
+            updated_points[team1] += 1
+            updated_points[team2] += 1
+        elif result == "Loss":
+            updated_points[team2] += 3
+
 for week, matches in weekly_fixtures.items():
     with st.expander(f"🗓️ {week} Matches", expanded=False):
         for i, (team1, team2) in enumerate(matches):
@@ -93,31 +110,9 @@ for week, matches in weekly_fixtures.items():
             else:
                 weeks_missing_results.add(week)
 
-    # Recalculate updated points fresh each week
-    updated_points = tracked_teams.copy()
-    for match_key, result in match_results.items():
-        if result not in ["Win", "Draw", "Loss"]:
-            continue
-        team1, team2 = match_key.split(" vs ")
-        if team1 in updated_points and team2 in updated_points:
-            if result == "Win":
-                updated_points[team1] += 3
-            elif result == "Draw":
-                updated_points[team1] += 1
-                updated_points[team2] += 1
-            elif result == "Loss":
-                updated_points[team2] += 3
-
     df_week = pd.DataFrame({"Team": list(updated_points.keys()), "Points": list(updated_points.values())})
     df_week = df_week.sort_values(by="Points", ascending=False).reset_index(drop=True)
     st.markdown(f"**{week} Standings**")
-    st.dataframe(df_week, height=300)
-
-# Final week standings
-if current_week is not None:
-    df_week = pd.DataFrame({"Team": list(updated_points.keys()), "Points": list(updated_points.values())})
-    df_week = df_week.sort_values(by="Points", ascending=False).reset_index(drop=True)
-    st.markdown(f"**{current_week} Standings**")
     st.dataframe(df_week, height=300)
 
 # -------------------- FINAL STANDINGS -------------------- #
