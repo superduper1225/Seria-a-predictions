@@ -110,6 +110,12 @@ points_df.index = ["Start"] + [f"Week {i}" for i in range(30, 30 + len(points_df
 st.line_chart(points_df)
 
 # -------------------- FINAL STANDINGS -------------------- #
+original_ranks = {
+    team: idx for idx, (team, _) in enumerate(
+        sorted(tracked_teams.items(), key=lambda x: x[1], reverse=True)
+    )
+}
+
 standings_df = pd.DataFrame(updated_points.items(), columns=["Team", "Points"])
 standings_df = standings_df.sort_values(by="Points", ascending=False).reset_index(drop=True)
 
