@@ -58,18 +58,19 @@ if st.button("🔄 Reset All Results"):
     st.rerun()
 
 # -------------------- MATCH SELECTION -------------------- #
-points_progression = {team: [points] for team, points in tracked_teams.items()}
-updated_points = tracked_teams.copy()
-current_week = None
-
 st.subheader("📅 Match Results by Week")
 
-weeks_missing_results = set()
 weekly_fixtures = defaultdict(list)
 for fixture in fixtures:
     weekly_fixtures[fixture[0]].append(fixture[1:])
 
+if "match_results" not in st.session_state:
+    st.session_state.match_results = {}
+match_results = st.session_state.match_results
+
 weeks_missing_results = set()
+
+points_progression = {team: [tracked_teams[team]] for team in tracked_teams}
 
 for week, matches in weekly_fixtures.items():
     with st.expander(f"🗓️ {week} Matches", expanded=False):
@@ -87,29 +88,25 @@ for week, matches in weekly_fixtures.items():
             )
 
             match_results[match_key] = result
-            if result not in ["Win", "Draw", "Loss"]:
-                weeks_missing_results.add(week)
-            if result:
+            if result in ["Win", "Draw", "Loss"]:
                 match_results[reverse_key] = {"Win": "Loss", "Loss": "Win", "Draw": "Draw"}[result]
+            else:
+                weeks_missing_results.add(week)
 
-                if team1 in updated_points and team2 in updated_points:
-                    base_points = tracked_teams.copy()
-                    updated_points[team1] = base_points[team1]
-                    updated_points[team2] = base_points[team2]
-
-                if result:
-                    if team1 in updated_points:
-                        if result == "Win":
-                            updated_points[team1] += 3
-                        elif result == "Draw":
-                            updated_points[team1] += 1
-                    if team2 in updated_points:
-                        if result == "Loss":
-                            updated_points[team2] += 3
-                        elif result == "Draw":
-                            updated_points[team2] += 1
-
-                points_progression[team1].append(updated_points[team1])
+    # Recalculate updated points fresh each week
+    updated_points = tracked_teams.copy()
+    for match_key, result in match_results.items():
+        if result not in ["Win", "Draw", "Loss"]:
+            continue
+        team1, team2 = match_key.split(" vs ")
+        if team1 in updated_points and team2 in updated_points:
+            if result == "Win":
+                updated_points[team1] += 3
+            elif result == "Draw":
+                updated_points[team1] += 1
+                updated_points[team2] += 1
+            elif result == "Loss":
+                updated_points[team2] += 3
 
     df_week = pd.DataFrame({"Team": list(updated_points.keys()), "Points": list(updated_points.values())})
     df_week = df_week.sort_values(by="Points", ascending=False).reset_index(drop=True)
